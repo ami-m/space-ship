@@ -15,7 +15,7 @@ const (
 
 type Game struct {
 	pressedKeys []ebiten.Key
-	ball        *Ball
+	ship        *Ship
 }
 
 func (g *Game) Update() error {
@@ -23,21 +23,21 @@ func (g *Game) Update() error {
 	for _, k := range g.pressedKeys {
 		switch k {
 		case ebiten.KeyArrowUp:
-			g.ball.OnUp()
+			g.ship.OnUp()
 		case ebiten.KeyArrowDown:
-			g.ball.OnDown()
+			g.ship.OnDown()
 		case ebiten.KeyArrowLeft:
-			g.ball.OnLeft()
+			g.ship.OnLeft()
 		case ebiten.KeyArrowRight:
-			g.ball.OnRight()
+			g.ship.OnRight()
 		}
 	}
-	g.ball.Drift()
+	g.ship.Drift()
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ball: [%v,%v]\n\n", g.ball.PosX, g.ball.PosY), int(g.ball.PosX), int(g.ball.PosY))
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: [%v,%v]\n\n", g.ship.PosX, g.ship.PosY), int(g.ship.PosX), int(g.ship.PosY))
 
 }
 
@@ -45,10 +45,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 	return ScreenWidth, ScreenHeight
 }
 
-func NewGame(ballOptions ...BallOption) *Game {
+func NewGame(shipOptions ...ShipOption) *Game {
 	return &Game{
 		pressedKeys: nil,
-		ball:        NewBall(ballOptions...),
+		ship:        NewShip(shipOptions...),
 	}
 }
 
@@ -56,11 +56,11 @@ func main() {
 	ebiten.SetWindowSize(640, 480)
 	ebiten.SetWindowTitle("Hello, World!")
 
-	ballOptions := []BallOption{
+	shipOptions := []ShipOption{
 		WithSpeed(1, 1),
 	}
 
-	if err := ebiten.RunGame(NewGame(ballOptions...)); err != nil {
+	if err := ebiten.RunGame(NewGame(shipOptions...)); err != nil {
 		log.Fatal(err)
 	}
 }

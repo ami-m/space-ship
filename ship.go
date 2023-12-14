@@ -1,11 +1,6 @@
 package main
 
-const (
-	BallMaxVelocity = 50
-	BallMinVelocity = 0
-)
-
-type Ball struct {
+type Ship struct {
 	PosX   float64
 	PosY   float64
 	SpeedX float64
@@ -13,25 +8,25 @@ type Ball struct {
 	Radius float64
 }
 
-type BallOption func(ball *Ball)
+type ShipOption func(ship *Ship)
 
-func WithPos(x, y float64) BallOption {
-	return func(ball *Ball) {
-		ball.PosX = x
-		ball.PosY = y
+func WithPos(x, y float64) ShipOption {
+	return func(ship *Ship) {
+		ship.PosX = x
+		ship.PosY = y
 	}
 }
 
-func WithSpeed(x, y float64) BallOption {
-	return func(ball *Ball) {
-		ball.SpeedX = x
-		ball.SpeedY = y
+func WithSpeed(x, y float64) ShipOption {
+	return func(ship *Ship) {
+		ship.SpeedX = x
+		ship.SpeedY = y
 	}
 }
 
-func NewBall(opts ...BallOption) *Ball {
+func NewShip(opts ...ShipOption) *Ship {
 	defaultRadius := 16.0
-	res := Ball{
+	res := Ship{
 		Radius: defaultRadius,
 		PosX:   defaultRadius,
 		PosY:   defaultRadius,
@@ -42,13 +37,13 @@ func NewBall(opts ...BallOption) *Ball {
 	return &res
 }
 
-func (b *Ball) Drift() {
+func (b *Ship) Drift() {
 	b.PosX += b.SpeedX
 	b.PosY += b.SpeedY
 	b.OnWallCollision()
 }
 
-func (b *Ball) OnWallCollision() {
+func (b *Ship) OnWallCollision() {
 	// up
 	if b.PosY-b.Radius < 0 {
 		b.PosY = b.Radius
@@ -71,18 +66,18 @@ func (b *Ball) OnWallCollision() {
 	}
 }
 
-func (b *Ball) OnUp() {
+func (b *Ship) OnUp() {
 	b.PosY -= 1
 }
 
-func (b *Ball) OnDown() {
+func (b *Ship) OnDown() {
 	b.PosY += 1
 }
 
-func (b *Ball) OnLeft() {
+func (b *Ship) OnLeft() {
 	b.PosX -= 1
 }
 
-func (b *Ball) OnRight() {
+func (b *Ship) OnRight() {
 	b.PosX += 1
 }
