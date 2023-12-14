@@ -37,7 +37,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: [%v,%v]\n\n", g.ship.PosX, g.ship.PosY), int(g.ship.PosX), int(g.ship.PosY))
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: [%v,%v]\n\n", g.ship.Pos.X, g.ship.Pos.Y), int(g.ship.Pos.X), int(g.ship.Pos.Y))
 
 }
 
