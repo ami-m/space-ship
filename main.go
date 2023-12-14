@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"log"
 )
@@ -37,9 +35,8 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	//ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: [%v,%v]\n\n", g.ship.Pos.X, g.ship.Pos.Y), int(g.ship.Pos.X), int(g.ship.Pos.Y))
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: %v[%v,%v]", g.ship.Heading, g.ship.Speed.X, g.ship.Speed.Y), int(g.ship.Pos.X), int(g.ship.Pos.Y))
-
+	//ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: %v[%v,%v]", g.ship.Heading, g.ship.Speed.X, g.ship.Speed.Y), int(g.ship.Pos.X), int(g.ship.Pos.Y))
+	DrawShip(screen, g.ship)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -58,8 +55,8 @@ func main() {
 	ebiten.SetWindowTitle("Hello, World!")
 
 	shipOptions := []ShipOption{
-		WithSpeed(1, 0),
-		WithMaxVelocity(2.5),
+		//WithSpeed(1, 0),
+		WithMaxVelocity(1),
 	}
 
 	if err := ebiten.RunGame(NewGame(shipOptions...)); err != nil {

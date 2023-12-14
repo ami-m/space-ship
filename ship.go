@@ -7,6 +7,7 @@ const (
 	DefaultCollisionElasticity float64 = -0.8
 	DefaultTurnRate            float64 = 3
 	DefaultRadius              float64 = 16
+	DefaultAcceleration        float64 = 0.2
 )
 
 type Ship struct {
@@ -17,6 +18,7 @@ type Ship struct {
 	TurnRate            float64
 	MaxVelocity         float64
 	CollisionElasticity float64
+	Acceleration        float64
 }
 
 type ShipOption func(ship *Ship)
@@ -60,6 +62,7 @@ func NewShip(opts ...ShipOption) *Ship {
 		TurnRate:            DefaultTurnRate,
 		MaxVelocity:         DefaultMaxVelocity,
 		CollisionElasticity: DefaultCollisionElasticity,
+		Acceleration:        DefaultAcceleration,
 	}
 	for _, opt := range opts {
 		opt(&res)
@@ -98,8 +101,8 @@ func (s *Ship) OnWallCollision() {
 
 func (s *Ship) OnUp() {
 	xPart, yPart := math.Sincos(s.Heading * math.Pi / 180.0)
-	s.Speed.X += xPart
-	s.Speed.Y += yPart
+	s.Speed.X += xPart * s.Acceleration
+	s.Speed.Y -= yPart * s.Acceleration
 }
 
 func (s *Ship) limitSpeed() {
