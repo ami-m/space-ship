@@ -6,23 +6,23 @@ const (
 )
 
 type Ball struct {
-	PosX   int
-	PosY   int
-	SpeedX int
-	SpeedY int
-	Radius int
+	PosX   float64
+	PosY   float64
+	SpeedX float64
+	SpeedY float64
+	Radius float64
 }
 
 type BallOption func(ball *Ball)
 
-func WithPos(x, y int) BallOption {
+func WithPos(x, y float64) BallOption {
 	return func(ball *Ball) {
 		ball.PosX = x
 		ball.PosY = y
 	}
 }
 
-func WithSpeed(x, y int) BallOption {
+func WithSpeed(x, y float64) BallOption {
 	return func(ball *Ball) {
 		ball.SpeedX = x
 		ball.SpeedY = y
@@ -30,7 +30,7 @@ func WithSpeed(x, y int) BallOption {
 }
 
 func NewBall(opts ...BallOption) *Ball {
-	defaultRadius := 16
+	defaultRadius := 16.0
 	res := Ball{
 		Radius: defaultRadius,
 		PosX:   defaultRadius,
@@ -71,18 +71,18 @@ func (b *Ball) OnWallCollision() {
 	}
 }
 
-func (b *Ball) OnUp(step int) {
-	b.PosY -= step
+func (b *Ball) OnUp() {
+	b.PosY -= 1
 }
 
-func (b *Ball) OnDown(step int) {
-	b.PosY += step
+func (b *Ball) OnDown() {
+	b.PosY += 1
 }
 
-func (b *Ball) OnLeft(step int) {
-	b.PosX -= step
+func (b *Ball) OnLeft() {
+	b.PosX -= 1
 }
 
-func (b *Ball) OnRight(step int) {
-	b.PosX += step
+func (b *Ball) OnRight() {
+	b.PosX += 1
 }

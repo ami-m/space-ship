@@ -23,13 +23,13 @@ func (g *Game) Update() error {
 	for _, k := range g.pressedKeys {
 		switch k {
 		case ebiten.KeyArrowUp:
-			g.ball.OnUp(1)
+			g.ball.OnUp()
 		case ebiten.KeyArrowDown:
-			g.ball.OnDown(1)
+			g.ball.OnDown()
 		case ebiten.KeyArrowLeft:
-			g.ball.OnLeft(1)
+			g.ball.OnLeft()
 		case ebiten.KeyArrowRight:
-			g.ball.OnRight(1)
+			g.ball.OnRight()
 		}
 	}
 	g.ball.Drift()
@@ -37,7 +37,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ball: [%d,%d]\n\n", g.ball.PosX, g.ball.PosY), g.ball.PosX, g.ball.PosY)
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ball: [%v,%v]\n\n", g.ball.PosX, g.ball.PosY), int(g.ball.PosX), int(g.ball.PosY))
 
 }
 
