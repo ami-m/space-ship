@@ -37,7 +37,8 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: [%v,%v]\n\n", g.ship.Pos.X, g.ship.Pos.Y), int(g.ship.Pos.X), int(g.ship.Pos.Y))
+	//ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: [%v,%v]\n\n", g.ship.Pos.X, g.ship.Pos.Y), int(g.ship.Pos.X), int(g.ship.Pos.Y))
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: %v[%v,%v]", g.ship.Heading, g.ship.Speed.X, g.ship.Speed.Y), int(g.ship.Pos.X), int(g.ship.Pos.Y))
 
 }
 
@@ -57,7 +58,8 @@ func main() {
 	ebiten.SetWindowTitle("Hello, World!")
 
 	shipOptions := []ShipOption{
-		WithSpeed(1, 1),
+		WithSpeed(1, 0),
+		WithMaxVelocity(2.5),
 	}
 
 	if err := ebiten.RunGame(NewGame(shipOptions...)); err != nil {
