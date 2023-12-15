@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"log"
 )
@@ -11,6 +9,8 @@ import (
 const (
 	ScreenWidth  = 320
 	ScreenHeight = 240
+	WindowWidth  = 640
+	WindowHeight = 480
 )
 
 type Game struct {
@@ -49,7 +49,7 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: %v[%v,%v]", g.ship.Heading, g.ship.Speed.X, g.ship.Speed.Y), int(g.ship.Pos.X), int(g.ship.Pos.Y))
+	//ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: %v[%v,%v]", g.ship.Heading, g.ship.Speed.X, g.ship.Speed.Y), int(g.ship.Pos.X), int(g.ship.Pos.Y))
 	DrawShip(screen, g.ship)
 
 	for _, shot := range g.Shots {
@@ -70,7 +70,7 @@ func NewGame(shipOptions ...ShipOption) *Game {
 }
 
 func main() {
-	ebiten.SetWindowSize(640, 480)
+	ebiten.SetWindowSize(WindowWidth, WindowHeight)
 	ebiten.SetWindowTitle("Hello, World!")
 
 	shipOptions := []ShipOption{
