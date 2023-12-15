@@ -1,24 +1,46 @@
 package main
 
 import (
+	"embed"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
+	"image"
+	_ "image/png"
 	"math"
 )
 
-func DrawShip(screen *ebiten.Image, s *Ship) {
-	x0 := s.Pos.X
-	y0 := s.Pos.Y
-	x1 := x0 + s.Radius*math.Sin(s.Heading*math.Pi/180)
-	y1 := y0 - s.Radius*math.Cos(s.Heading*math.Pi/180)
-	vector.StrokeLine(screen, float32(x0), float32(y0), float32(x1), float32(y1), 1, s.Color, false)
+//go:embed assets/*
+var assets embed.FS
 
-	// Draw arrowhead
-	arrowSize := 10.0
-	x2 := x1 + arrowSize*math.Sin((s.Heading+135)*math.Pi/180)
-	y2 := y1 - arrowSize*math.Cos((s.Heading+135)*math.Pi/180)
-	x3 := x1 + arrowSize*math.Sin((s.Heading-135)*math.Pi/180)
-	y3 := y1 - arrowSize*math.Cos((s.Heading-135)*math.Pi/180)
-	vector.StrokeLine(screen, float32(x1), float32(y1), float32(x2), float32(y2), 1, s.Color, false)
-	vector.StrokeLine(screen, float32(x1), float32(y1), float32(x3), float32(y3), 1, s.Color, false)
+func mustLoadImage(name string) *ebiten.Image {
+	f, err := assets.Open(name)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	img, _, err := image.Decode(f)
+	if err != nil {
+		panic(err)
+	}
+
+	return ebiten.NewImageFromImage(img)
+}
+
+func DrawShip(screen *ebiten.Image, s *Ship) {
+	const scaleCorrection = 0.25
+	var PlayerSprite = mustLoadImage("assets/theme1/PNG/playerShip1_blue.png")
+	op := &ebiten.DrawImageOptions{}
+
+	op.GeoM.Scale(scaleCorrection, scaleCorrection)
+
+	width := PlayerSprite.Bounds().Dx()
+	height := PlayerSprite.Bounds().Dy()
+	halfW := float64(width) * scaleCorrection / 2
+	halfH := float64(height) * scaleCorrection / 2
+	op.GeoM.Translate(-halfW, -halfH)
+
+	op.GeoM.Rotate(s.Heading * math.Pi / 180.0)
+	op.GeoM.Translate(s.Pos.X, s.Pos.Y)
+
+	screen.DrawImage(PlayerSprite, op)
 }
