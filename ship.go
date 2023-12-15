@@ -30,7 +30,7 @@ type Ship struct {
 	Acceleration        float64
 	MuzzleSpeed         float64
 	FireRate            time.Duration
-	LastShotFiredAt     time.Time
+	nextShotTimer       *Timer
 	SpritePath          string
 
 	Shots []*ShipShot
@@ -98,6 +98,8 @@ func NewShip(opts ...ShipOption) *Ship {
 		opt(&res)
 	}
 
+	res.nextShotTimer = NewTimer(res.FireRate)
+
 	// TODO: the radius thingy is no longer relevant
 	// build the resolv object for the ship
 	res.ResolvObj = resolv.NewObject(res.Pos.X, res.Pos.Y, res.Radius/2, res.Radius/2, "ship")
@@ -107,6 +109,7 @@ func NewShip(opts ...ShipOption) *Ship {
 }
 
 func (s *Ship) Update() {
+	s.nextShotTimer.Update()
 	s.Pos.Add(s.Speed)
 	s.updateResolver()
 
@@ -195,11 +198,10 @@ func mod360(n float64) float64 {
 }
 
 func (s *Ship) OnFire() *ShipShot {
-	if time.Now().Sub(s.LastShotFiredAt) < s.FireRate {
+	if !s.nextShotTimer.IsReady() {
 		return nil
 	}
-
-	s.LastShotFiredAt = time.Now()
+	s.nextShotTimer.Reset()
 
 	// shot speed by heading
 	shotSpeed := Vector{
