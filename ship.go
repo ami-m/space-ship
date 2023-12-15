@@ -1,6 +1,10 @@
 package main
 
-import "math"
+import (
+	"image/color"
+	"math"
+	"time"
+)
 
 const (
 	DefaultMaxVelocity         float64 = 1
@@ -8,6 +12,8 @@ const (
 	DefaultTurnRate            float64 = 3
 	DefaultRadius              float64 = 16
 	DefaultAcceleration        float64 = 0.2
+	DefaultMuzzleSpeed         float64 = 1.5
+	DefaultFireRate                    = 200 * time.Millisecond
 )
 
 type Ship struct {
@@ -19,6 +25,12 @@ type Ship struct {
 	MaxVelocity         float64
 	CollisionElasticity float64
 	Acceleration        float64
+	MuzzleSpeed         float64
+	FireRate            time.Duration
+	LastShotFiredAt     time.Time
+	Color               color.Color
+
+	Shots []*ShipShot
 }
 
 type ShipOption func(ship *Ship)
@@ -32,6 +44,12 @@ func WithHeading(heading float64) ShipOption {
 func WithTurnRate(r float64) ShipOption {
 	return func(ship *Ship) {
 		ship.TurnRate = r
+	}
+}
+
+func WithFireRate(r time.Duration) ShipOption {
+	return func(ship *Ship) {
+		ship.FireRate = r
 	}
 }
 
@@ -55,6 +73,12 @@ func WithSpeed(x, y float64) ShipOption {
 	}
 }
 
+func WithColor(c color.Color) ShipOption {
+	return func(ship *Ship) {
+		ship.Color = c
+	}
+}
+
 func NewShip(opts ...ShipOption) *Ship {
 	res := Ship{
 		Pos:                 Vector{DefaultRadius, DefaultRadius},
@@ -63,6 +87,9 @@ func NewShip(opts ...ShipOption) *Ship {
 		MaxVelocity:         DefaultMaxVelocity,
 		CollisionElasticity: DefaultCollisionElasticity,
 		Acceleration:        DefaultAcceleration,
+		MuzzleSpeed:         DefaultMuzzleSpeed,
+		FireRate:            DefaultFireRate,
+		Color:               color.RGBA{0xfa, 0xf8, 0xef, 0xff},
 	}
 	for _, opt := range opts {
 		opt(&res)
@@ -70,13 +97,13 @@ func NewShip(opts ...ShipOption) *Ship {
 	return &res
 }
 
-func (s *Ship) Drift() {
+func (s *Ship) Update() {
 	s.Pos.Add(s.Speed)
-	s.OnWallCollision()
+	s.handleWallCollision()
 	s.limitSpeed()
 }
 
-func (s *Ship) OnWallCollision() {
+func (s *Ship) handleWallCollision() {
 	// up
 	if s.Pos.Y-s.Radius < 0 {
 		s.Pos.Y = s.Radius
@@ -99,7 +126,7 @@ func (s *Ship) OnWallCollision() {
 	}
 }
 
-func (s *Ship) OnUp() {
+func (s *Ship) OnSpeedUp() {
 	xPart, yPart := math.Sincos(s.Heading * math.Pi / 180.0)
 	s.Speed.X += xPart * s.Acceleration
 	s.Speed.Y -= yPart * s.Acceleration
@@ -114,17 +141,17 @@ func (s *Ship) limitSpeed() {
 	}
 }
 
-func (s *Ship) OnDown() {
+func (s *Ship) OnSlowDown() {
 	s.Speed.X = s.Speed.X / 2
 	s.Speed.Y = s.Speed.Y / 2
 }
 
-func (s *Ship) OnLeft() {
+func (s *Ship) OnRotateLeft() {
 	s.Heading -= s.TurnRate
 	s.Heading = mod360(s.Heading)
 }
 
-func (s *Ship) OnRight() {
+func (s *Ship) OnRotateRight() {
 	s.Heading += s.TurnRate
 	s.Heading = mod360(s.Heading)
 }
@@ -137,4 +164,20 @@ func mod360(n float64) float64 {
 		n -= 360
 	}
 	return n
+}
+
+func (s *Ship) OnFire() *ShipShot {
+	if time.Now().Sub(s.LastShotFiredAt) < s.FireRate {
+		return nil
+	}
+
+	s.LastShotFiredAt = time.Now()
+
+	// shot speed by heading
+	shotSpeed := Vector{
+		X: s.MuzzleSpeed * math.Sin(s.Heading*math.Pi/180),
+		Y: -1 * s.MuzzleSpeed * math.Cos(s.Heading*math.Pi/180),
+	}
+	shotSpeed.Add(s.Speed)
+	return NewShipShot(s, s.Pos, shotSpeed, s.Heading)
 }
