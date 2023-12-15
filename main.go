@@ -15,7 +15,8 @@ const (
 
 type Game struct {
 	pressedKeys []ebiten.Key
-	ship        *Ship
+	ship1       *Ship
+	ship2       *Ship
 	Shots       []*ShipShot
 }
 
@@ -24,21 +25,39 @@ func (g *Game) Update() error {
 	for _, k := range g.pressedKeys {
 		switch k {
 		case ebiten.KeyArrowUp:
-			g.ship.OnSpeedUp()
+			g.ship1.OnSpeedUp()
 		case ebiten.KeyArrowDown:
-			g.ship.OnSlowDown()
+			g.ship1.OnSlowDown()
 		case ebiten.KeyArrowLeft:
-			g.ship.OnRotateLeft()
+			g.ship1.OnRotateLeft()
 		case ebiten.KeyArrowRight:
-			g.ship.OnRotateRight()
+			g.ship1.OnRotateRight()
 		case ebiten.KeySpace:
-			if shot := g.ship.OnFire(); shot != nil {
+			if shot := g.ship1.OnFire(); shot != nil {
 				g.Shots = append(g.Shots, shot)
 			}
 		}
 	}
 
-	g.ship.Update()
+	for _, k := range g.pressedKeys {
+		switch k {
+		case ebiten.KeyW:
+			g.ship2.OnSpeedUp()
+		case ebiten.KeyS:
+			g.ship2.OnSlowDown()
+		case ebiten.KeyA:
+			g.ship2.OnRotateLeft()
+		case ebiten.KeyD:
+			g.ship2.OnRotateRight()
+		case ebiten.KeyShiftLeft:
+			if shot := g.ship2.OnFire(); shot != nil {
+				g.Shots = append(g.Shots, shot)
+			}
+		}
+	}
+
+	g.ship1.Update()
+	g.ship2.Update()
 
 	g.removeOffScreenShots()
 	for _, shot := range g.Shots {
@@ -49,23 +68,23 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	//ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Ship: %v[%v,%v]", g.ship.Heading, g.ship.Speed.X, g.ship.Speed.Y), int(g.ship.Pos.X), int(g.ship.Pos.Y))
-	DrawShip(screen, g.ship)
+	DrawShip(screen, g.ship1)
+	DrawShip(screen, g.ship2)
 
 	for _, shot := range g.Shots {
 		DrawShot(screen, shot)
 	}
-	//ebitenutil.DebugPrint(screen, fmt.Sprintf("shots: %d", len(g.Shots)))
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return ScreenWidth, ScreenHeight
 }
 
-func NewGame(shipOptions ...ShipOption) *Game {
+func NewGame(ship1, ship2 *Ship) *Game {
 	return &Game{
 		pressedKeys: nil,
-		ship:        NewShip(shipOptions...),
+		ship1:       ship1,
+		ship2:       ship2,
 	}
 }
 
@@ -73,12 +92,12 @@ func main() {
 	ebiten.SetWindowSize(WindowWidth, WindowHeight)
 	ebiten.SetWindowTitle("Hello, World!")
 
-	shipOptions := []ShipOption{
-		//WithSpeed(1, 0),
-		WithMaxVelocity(1),
-	}
+	ship1 := NewShip(WithSpritePath("assets/theme1/PNG/playerShip1_green.png"))
+	ship2 := NewShip(
+		WithPosition(100, 100),
+		WithSpritePath("assets/theme1/PNG/playerShip3_blue.png"))
 
-	if err := ebiten.RunGame(NewGame(shipOptions...)); err != nil {
+	if err := ebiten.RunGame(NewGame(ship1, ship2)); err != nil {
 		log.Fatal(err)
 	}
 }

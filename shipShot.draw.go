@@ -3,11 +3,12 @@ package main
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
+	"image/color"
 	"math"
 )
 
 func DrawShot(screen *ebiten.Image, s *ShipShot) {
-	clr := s.OwningShip.Color
+	clr := color.RGBA{0xfa, 0xf8, 0xef, 0xff}
 
 	x0 := s.Position.X
 	y0 := s.Position.Y

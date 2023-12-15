@@ -1,7 +1,6 @@
 package main
 
 import (
-	"image/color"
 	"math"
 	"time"
 )
@@ -14,6 +13,7 @@ const (
 	DefaultAcceleration        float64 = 0.2
 	DefaultMuzzleSpeed         float64 = 1.5
 	DefaultFireRate                    = 200 * time.Millisecond
+	DefaultSpritePath          string  = "assets/theme1/PNG/playerShip1_blue.png"
 )
 
 type Ship struct {
@@ -28,7 +28,7 @@ type Ship struct {
 	MuzzleSpeed         float64
 	FireRate            time.Duration
 	LastShotFiredAt     time.Time
-	Color               color.Color
+	SpritePath          string
 
 	Shots []*ShipShot
 }
@@ -38,6 +38,12 @@ type ShipOption func(ship *Ship)
 func WithHeading(heading float64) ShipOption {
 	return func(ship *Ship) {
 		ship.Heading = heading
+	}
+}
+
+func WithSpritePath(path string) ShipOption {
+	return func(ship *Ship) {
+		ship.SpritePath = path
 	}
 }
 
@@ -73,12 +79,6 @@ func WithSpeed(x, y float64) ShipOption {
 	}
 }
 
-func WithColor(c color.Color) ShipOption {
-	return func(ship *Ship) {
-		ship.Color = c
-	}
-}
-
 func NewShip(opts ...ShipOption) *Ship {
 	res := Ship{
 		Pos:                 Vector{DefaultRadius, DefaultRadius},
@@ -89,7 +89,7 @@ func NewShip(opts ...ShipOption) *Ship {
 		Acceleration:        DefaultAcceleration,
 		MuzzleSpeed:         DefaultMuzzleSpeed,
 		FireRate:            DefaultFireRate,
-		Color:               color.RGBA{0xfa, 0xf8, 0xef, 0xff},
+		SpritePath:          DefaultSpritePath,
 	}
 	for _, opt := range opts {
 		opt(&res)

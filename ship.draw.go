@@ -28,7 +28,7 @@ func mustLoadImage(name string) *ebiten.Image {
 
 func DrawShip(screen *ebiten.Image, s *Ship) {
 	const scaleCorrection = 0.25
-	var PlayerSprite = mustLoadImage("assets/theme1/PNG/playerShip1_blue.png")
+	var PlayerSprite = mustLoadImage(s.SpritePath)
 	op := &ebiten.DrawImageOptions{}
 
 	op.GeoM.Scale(scaleCorrection, scaleCorrection)
