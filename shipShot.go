@@ -1,11 +1,15 @@
 package main
 
-import "time"
+import (
+	"github.com/solarlune/resolv"
+	"time"
+)
 
 type ShipShot struct {
+	ResolvObj  *resolv.Object
 	OwningShip *Ship
 	FiredAt    time.Time
-	Position   Vector
+	Pos        Vector
 	Speed      Vector
 	Heading    float64
 	Radius     float64
@@ -13,37 +17,52 @@ type ShipShot struct {
 }
 
 func NewShipShot(ship *Ship, pos Vector, speed Vector, heading float64) *ShipShot {
-	return &ShipShot{
+	res := ShipShot{
 		OwningShip: ship,
 		FiredAt:    time.Now(),
-		Position:   pos,
+		Pos:        pos,
 		Speed:      speed,
 		Heading:    heading,
 		Radius:     5,
 		OffScreen:  false,
 	}
+
+	// build the resolv object
+	res.ResolvObj = resolv.NewObject(res.Pos.X, res.Pos.Y, res.Radius, res.Radius, "shipShot")
+	res.ResolvObj.Data = &res
+
+	return &res
 }
 
 func (s *ShipShot) Update() {
-	s.Position.Add(s.Speed)
+	s.Pos.Add(s.Speed)
+	s.updateResolver()
 	s.handleWallCollision()
+	s.handleShipCollision()
+}
+
+func (s *ShipShot) updateResolver() {
+	s.ResolvObj.X = s.Pos.X
+	s.ResolvObj.Y = s.Pos.Y
+	s.ResolvObj.Update()
 }
 
 func (s *ShipShot) handleWallCollision() {
-	// up
-	if s.Position.Y-s.Radius < 0 {
+	if collision := s.ResolvObj.Check(s.Speed.X, s.Speed.Y, "wall"); collision != nil {
 		s.OffScreen = true
 	}
-	// down
-	if s.Position.Y+s.Radius > ScreenHeight {
-		s.OffScreen = true
-	}
-	// left
-	if s.Position.X-s.Radius < 0 {
-		s.OffScreen = true
-	}
-	// right
-	if s.Position.X+s.Radius > ScreenWidth {
-		s.OffScreen = true
+}
+
+func (s *ShipShot) handleShipCollision() {
+	if collision := s.ResolvObj.Check(s.Speed.X, s.Speed.Y, "ship"); collision != nil {
+		if ship, ok := collision.Objects[0].Data.(*Ship); ok {
+			if ship == s.OwningShip {
+				return
+			}
+
+			s.OffScreen = true
+			ship.OnHitByShot()
+		}
+
 	}
 }

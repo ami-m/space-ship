@@ -98,8 +98,9 @@ func NewShip(opts ...ShipOption) *Ship {
 		opt(&res)
 	}
 
+	// TODO: the radius thingy is no longer relevant
 	// build the resolv object for the ship
-	res.ResolvObj = resolv.NewObject(res.Pos.X, res.Pos.Y, res.Radius, res.Radius, "ship")
+	res.ResolvObj = resolv.NewObject(res.Pos.X, res.Pos.Y, res.Radius/2, res.Radius/2, "ship")
 	res.ResolvObj.Data = &res
 
 	return &res
@@ -179,6 +180,10 @@ func (s *Ship) OnRotateRight() {
 	s.Heading = mod360(s.Heading)
 }
 
+func (s *Ship) OnHitByShot() {
+	log.Info("hit by shot")
+}
+
 func mod360(n float64) float64 {
 	for n < 0 {
 		n += 360
@@ -202,5 +207,12 @@ func (s *Ship) OnFire() *ShipShot {
 		Y: -1 * s.MuzzleSpeed * math.Cos(s.Heading*math.Pi/180),
 	}
 	shotSpeed.Add(s.Speed)
-	return NewShipShot(s, s.Pos, shotSpeed, s.Heading)
+
+	shotPosition := s.Pos
+	shotPosition.Add(Vector{
+		X: s.Radius / 2 * math.Sin(s.Heading*math.Pi/180),
+		Y: -1 * s.Radius / 2 * math.Cos(s.Heading*math.Pi/180),
+	})
+
+	return NewShipShot(s, shotPosition, shotSpeed, s.Heading)
 }

@@ -36,7 +36,7 @@ func (g *Game) Update() error {
 			g.ship1.OnRotateRight()
 		case ebiten.KeySpace:
 			if shot := g.ship1.OnFire(); shot != nil {
-				g.Shots = append(g.Shots, shot)
+				g.addShot(shot)
 			}
 		}
 	}
@@ -53,7 +53,7 @@ func (g *Game) Update() error {
 			g.ship2.OnRotateRight()
 		case ebiten.KeyShiftLeft:
 			if shot := g.ship2.OnFire(); shot != nil {
-				g.Shots = append(g.Shots, shot)
+				g.addShot(shot)
 			}
 		}
 	}
@@ -117,11 +117,18 @@ func main() {
 	}
 }
 
+func (g *Game) addShot(shot *ShipShot) {
+	g.Shots = append(g.Shots, shot)
+	g.space.Add(shot.ResolvObj)
+}
+
 func (g *Game) removeOffScreenShots() {
 	shots := make([]*ShipShot, 0)
 	for _, shot := range g.Shots {
 		if !shot.OffScreen {
 			shots = append(shots, shot)
+		} else {
+			g.space.Remove(shot.ResolvObj)
 		}
 	}
 	g.Shots = shots
