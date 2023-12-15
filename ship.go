@@ -1,6 +1,8 @@
 package main
 
 import (
+	log "github.com/sirupsen/logrus"
+	"github.com/solarlune/resolv"
 	"math"
 	"time"
 )
@@ -17,6 +19,7 @@ const (
 )
 
 type Ship struct {
+	ResolvObj           *resolv.Object
 	Pos                 Vector
 	Speed               Vector
 	Radius              float64
@@ -94,35 +97,55 @@ func NewShip(opts ...ShipOption) *Ship {
 	for _, opt := range opts {
 		opt(&res)
 	}
+
+	// build the resolv object for the ship
+	res.ResolvObj = resolv.NewObject(res.Pos.X, res.Pos.Y, res.Radius, res.Radius, "ship")
+	res.ResolvObj.Data = &res
+
 	return &res
 }
 
 func (s *Ship) Update() {
 	s.Pos.Add(s.Speed)
+	s.updateResolver()
+
 	s.handleWallCollision()
 	s.limitSpeed()
 }
 
+func (s *Ship) updateResolver() {
+	s.ResolvObj.X = s.Pos.X
+	s.ResolvObj.Y = s.Pos.Y
+	s.ResolvObj.Update()
+}
+
 func (s *Ship) handleWallCollision() {
-	// up
-	if s.Pos.Y-s.Radius < 0 {
-		s.Pos.Y = s.Radius
-		s.Speed.Y *= s.CollisionElasticity
-	}
-	// down
-	if s.Pos.Y+s.Radius > ScreenHeight {
-		s.Pos.Y = ScreenHeight - s.Radius
-		s.Speed.Y *= s.CollisionElasticity
-	}
-	// left
-	if s.Pos.X-s.Radius < 0 {
-		s.Pos.X = s.Radius
-		s.Speed.X *= s.CollisionElasticity
-	}
-	// right
-	if s.Pos.X+s.Radius > ScreenWidth {
-		s.Pos.X = ScreenWidth - s.Radius
-		s.Speed.X *= s.CollisionElasticity
+	if collision := s.ResolvObj.Check(s.Speed.X, s.Speed.Y, "wall"); collision != nil {
+		wall := collision.Objects[0]
+		contact := collision.ContactWithObject(wall)
+		log.Infof("collided with: %v vec: [%v,%v]", wall.Tags(), contact.X(), contact.Y())
+
+		if collision.HasTags("ceiling") {
+			s.Pos.Y += contact.Y()
+			s.Speed.Y *= s.CollisionElasticity
+		}
+
+		if collision.HasTags("floor") {
+			s.Pos.Y += contact.Y()
+			s.Speed.Y *= s.CollisionElasticity
+		}
+
+		if collision.HasTags("leftWall") {
+			s.Pos.X += contact.X()
+			s.Speed.X *= s.CollisionElasticity
+		}
+
+		if collision.HasTags("rightWall") {
+			s.Pos.X += contact.X()
+			s.Speed.X *= s.CollisionElasticity
+		}
+
+		s.updateResolver()
 	}
 }
 

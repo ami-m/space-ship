@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/solarlune/resolv"
 	"log"
 )
 
@@ -14,6 +15,7 @@ const (
 )
 
 type Game struct {
+	space       *resolv.Space
 	pressedKeys []ebiten.Key
 	ship1       *Ship
 	ship2       *Ship
@@ -81,11 +83,24 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func NewGame(ship1, ship2 *Ship) *Game {
-	return &Game{
+	res := Game{
+		space:       resolv.NewSpace(ScreenWidth, ScreenHeight, 16, 16),
 		pressedKeys: nil,
 		ship1:       ship1,
 		ship2:       ship2,
 	}
+
+	// space boundaries
+	res.space.Add(
+		resolv.NewObject(0, 0, ScreenWidth, 16, "wall", "ceiling"),
+		resolv.NewObject(0, ScreenHeight-16, ScreenWidth, 16, "wall", "floor"),
+		resolv.NewObject(0, 16, 16, ScreenHeight-32, "wall", "leftWall"),
+		resolv.NewObject(ScreenWidth-16, 16, 16, ScreenHeight-32, "wall", "rightWall"),
+	)
+	res.space.Add(ship1.ResolvObj)
+	res.space.Add(ship2.ResolvObj)
+
+	return &res
 }
 
 func main() {
