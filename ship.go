@@ -2,6 +2,7 @@ package main
 
 import (
 	"game/events"
+	"game/timer"
 	"game/vector"
 	"github.com/hajimehoshi/ebiten/v2"
 	log "github.com/sirupsen/logrus"
@@ -45,7 +46,7 @@ type Ship struct {
 	Acceleration        float64
 	MuzzleSpeed         float64
 	FireRate            time.Duration
-	nextShotTimer       *Timer
+	nextShotTimer       *timer.Timer
 	SpritePath          string
 	KeyMappings         ShipKeyMapping
 
@@ -77,7 +78,7 @@ func NewShip(id int, opts ...ShipOption) *Ship {
 		opt(&res)
 	}
 
-	res.nextShotTimer = NewTimer(res.FireRate)
+	res.nextShotTimer = timer.NewTimer(res.FireRate)
 
 	// TODO: the radius thingy is no longer relevant
 	// build the resolv object for the ship
