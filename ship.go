@@ -1,7 +1,9 @@
 package main
 
 import (
+	"game/events"
 	"game/vector"
+	"github.com/hajimehoshi/ebiten/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/solarlune/resolv"
 	"math"
@@ -19,7 +21,19 @@ const (
 	DefaultSpritePath          string  = "assets/theme1/PNG/playerShip1_blue.png"
 )
 
+const (
+	MapUp    = "up"
+	MapDown  = "down"
+	MapLeft  = "left"
+	MapRight = "right"
+	MapFire  = "fire"
+)
+
+type ShipKeyMapping map[ebiten.Key]string
+
 type Ship struct {
+	Id                  int
+	eventPublisher      events.Subject
 	ResolvObj           *resolv.Object
 	Pos                 vector.Vector
 	Speed               vector.Vector
@@ -33,58 +47,15 @@ type Ship struct {
 	FireRate            time.Duration
 	nextShotTimer       *Timer
 	SpritePath          string
+	KeyMappings         ShipKeyMapping
 
 	Shots []*ShipShot
 }
 
-type ShipOption func(ship *Ship)
-
-func WithHeading(heading float64) ShipOption {
-	return func(ship *Ship) {
-		ship.Heading = heading
-	}
-}
-
-func WithSpritePath(path string) ShipOption {
-	return func(ship *Ship) {
-		ship.SpritePath = path
-	}
-}
-
-func WithTurnRate(r float64) ShipOption {
-	return func(ship *Ship) {
-		ship.TurnRate = r
-	}
-}
-
-func WithFireRate(r time.Duration) ShipOption {
-	return func(ship *Ship) {
-		ship.FireRate = r
-	}
-}
-
-func WithMaxVelocity(m float64) ShipOption {
-	return func(ship *Ship) {
-		ship.MaxVelocity = m
-	}
-}
-
-func WithPosition(x, y float64) ShipOption {
-	return func(ship *Ship) {
-		ship.Pos.X = x
-		ship.Pos.Y = y
-	}
-}
-
-func WithSpeed(x, y float64) ShipOption {
-	return func(ship *Ship) {
-		ship.Speed.X = x
-		ship.Speed.Y = y
-	}
-}
-
-func NewShip(opts ...ShipOption) *Ship {
+func NewShip(id int, opts ...ShipOption) *Ship {
 	res := Ship{
+		Id:                  id,
+		eventPublisher:      events.NewEventPublisher(),
 		Pos:                 vector.Vector{X: DefaultRadius, Y: DefaultRadius},
 		Radius:              DefaultRadius,
 		TurnRate:            DefaultTurnRate,
@@ -94,6 +65,13 @@ func NewShip(opts ...ShipOption) *Ship {
 		MuzzleSpeed:         DefaultMuzzleSpeed,
 		FireRate:            DefaultFireRate,
 		SpritePath:          DefaultSpritePath,
+		KeyMappings: map[ebiten.Key]string{
+			ebiten.KeyArrowUp:    MapUp,
+			ebiten.KeyArrowDown:  MapDown,
+			ebiten.KeyArrowLeft:  MapLeft,
+			ebiten.KeyArrowRight: MapRight,
+			ebiten.KeySpace:      MapFire,
+		},
 	}
 	for _, opt := range opts {
 		opt(&res)
@@ -186,6 +164,9 @@ func (s *Ship) OnRotateRight() {
 
 func (s *Ship) OnHitByShot() {
 	log.Info("hit by shot")
+	s.eventPublisher.FireEvent("shipHitByShot", events.EventPayload{
+		"shipId": s.Id,
+	})
 }
 
 func mod360(n float64) float64 {
@@ -198,9 +179,9 @@ func mod360(n float64) float64 {
 	return n
 }
 
-func (s *Ship) OnFire() *ShipShot {
+func (s *Ship) OnFire() {
 	if !s.nextShotTimer.IsReady() {
-		return nil
+		return
 	}
 	s.nextShotTimer.Reset()
 
@@ -217,5 +198,43 @@ func (s *Ship) OnFire() *ShipShot {
 		Y: -1 * s.Radius / 2 * math.Cos(s.Heading*math.Pi/180),
 	})
 
-	return NewShipShot(s, shotPosition, shotSpeed, s.Heading)
+	s.eventPublisher.FireEvent("shipFired", events.EventPayload{
+		"shipId": s.Id,
+		"ship":   s,
+		"shot":   NewShipShot(s, shotPosition, shotSpeed, s.Heading),
+	})
+}
+
+func (s *Ship) OnEvent(eventName string, payload events.EventPayload) {
+	switch eventName {
+	case "keyPress":
+		s.handleKeyPress(payload["key"].(ebiten.Key))
+	}
+}
+
+func (s *Ship) GetID() int {
+	return s.Id
+}
+
+func (s *Ship) handleKeyPress(key ebiten.Key) {
+	switch s.KeyMappings[key] {
+	case MapUp:
+		s.OnSpeedUp()
+	case MapDown:
+		s.OnSlowDown()
+	case MapLeft:
+		s.OnRotateLeft()
+	case MapRight:
+		s.OnRotateRight()
+	case MapFire:
+		s.OnFire()
+	}
+}
+
+func (s *Ship) AddListener(observer events.Observer, eventName string) {
+	s.eventPublisher.AddListener(observer, eventName)
+}
+
+func (s *Ship) RemoveListener(observer events.Observer, eventName string) {
+	s.eventPublisher.RemoveListener(observer, eventName)
 }

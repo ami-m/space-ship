@@ -4,7 +4,6 @@ import (
 	"game/vector"
 	"github.com/hajimehoshi/ebiten/v2"
 	ebitenVec "github.com/hajimehoshi/ebiten/v2/vector"
-	log "github.com/sirupsen/logrus"
 	"image/color"
 )
 
@@ -54,7 +53,6 @@ func (b *Bar) IncPoints(n int) {
 func (b *Bar) Draw(screen *ebiten.Image) {
 	// Calculate the current color based on the remaining points.
 	currentColor := b.calcCurrentColor()
-	log.Info(currentColor)
 
 	// Calculate the width of the filled health bar based on the remaining points.
 	barWidth := (b.Width - float64(2*b.BorderWidth)) * (float64(b.RemainingPoints) / float64(b.TotalPoints))

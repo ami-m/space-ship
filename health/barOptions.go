@@ -34,9 +34,12 @@ func WithBorderWidth(borderWidth int) BarOption {
 }
 
 // WithPosition sets the Position field of the Bar.
-func WithPosition(position vector.Vector) BarOption {
+func WithPosition(x, y float64) BarOption {
 	return func(b *Bar) {
-		b.Position = position
+		b.Position = vector.Vector{
+			X: x,
+			Y: y,
+		}
 	}
 }
 
