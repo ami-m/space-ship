@@ -1,7 +1,7 @@
 package main
 
 import (
-	"game/vector"
+	"game/utils/vector"
 	"github.com/solarlune/resolv"
 	"time"
 )

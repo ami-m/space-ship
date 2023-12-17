@@ -2,8 +2,8 @@ package main
 
 import (
 	"game/events"
-	"game/timer"
-	"game/vector"
+	"game/utils/timer"
+	"game/utils/vector"
 	"github.com/hajimehoshi/ebiten/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/solarlune/resolv"

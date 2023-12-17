@@ -1,7 +1,7 @@
 package health
 
 import (
-	"game/vector"
+	"game/utils/vector"
 	"github.com/hajimehoshi/ebiten/v2"
 	ebitenVec "github.com/hajimehoshi/ebiten/v2/vector"
 	"image/color"

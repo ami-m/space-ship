@@ -1,7 +1,7 @@
 package health
 
 import (
-	"game/vector"
+	"game/utils/vector"
 	"image/color"
 )
 
