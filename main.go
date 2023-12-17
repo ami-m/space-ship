@@ -1,6 +1,7 @@
 package main
 
 import (
+	"game/health"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/solarlune/resolv"
@@ -20,10 +21,22 @@ type Game struct {
 	ship1       *Ship
 	ship2       *Ship
 	Shots       []*ShipShot
+	bar         *health.Bar
 }
 
 func (g *Game) Update() error {
 	g.pressedKeys = inpututil.AppendPressedKeys(g.pressedKeys[:0])
+
+	for _, k := range g.pressedKeys {
+		switch k {
+		case ebiten.KeyArrowUp:
+			g.bar.IncPoints(5)
+		case ebiten.KeyArrowDown:
+			g.bar.IncPoints(-5)
+
+		}
+	}
+
 	for _, k := range g.pressedKeys {
 		switch k {
 		case ebiten.KeyArrowUp:
@@ -76,6 +89,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for _, shot := range g.Shots {
 		DrawShot(screen, shot)
 	}
+
+	g.bar.Draw(screen)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -88,6 +103,7 @@ func NewGame(ship1, ship2 *Ship) *Game {
 		pressedKeys: nil,
 		ship1:       ship1,
 		ship2:       ship2,
+		bar:         health.NewBar(),
 	}
 
 	// space boundaries

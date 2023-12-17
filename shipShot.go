@@ -1,6 +1,7 @@
 package main
 
 import (
+	"game/vector"
 	"github.com/solarlune/resolv"
 	"time"
 )
@@ -9,14 +10,14 @@ type ShipShot struct {
 	ResolvObj  *resolv.Object
 	OwningShip *Ship
 	FiredAt    time.Time
-	Pos        Vector
-	Speed      Vector
+	Pos        vector.Vector
+	Speed      vector.Vector
 	Heading    float64
 	Radius     float64
 	OffScreen  bool
 }
 
-func NewShipShot(ship *Ship, pos Vector, speed Vector, heading float64) *ShipShot {
+func NewShipShot(ship *Ship, pos vector.Vector, speed vector.Vector, heading float64) *ShipShot {
 	res := ShipShot{
 		OwningShip: ship,
 		FiredAt:    time.Now(),

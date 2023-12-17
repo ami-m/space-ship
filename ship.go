@@ -1,6 +1,7 @@
 package main
 
 import (
+	"game/vector"
 	log "github.com/sirupsen/logrus"
 	"github.com/solarlune/resolv"
 	"math"
@@ -20,8 +21,8 @@ const (
 
 type Ship struct {
 	ResolvObj           *resolv.Object
-	Pos                 Vector
-	Speed               Vector
+	Pos                 vector.Vector
+	Speed               vector.Vector
 	Radius              float64
 	Heading             float64
 	TurnRate            float64
@@ -84,7 +85,7 @@ func WithSpeed(x, y float64) ShipOption {
 
 func NewShip(opts ...ShipOption) *Ship {
 	res := Ship{
-		Pos:                 Vector{DefaultRadius, DefaultRadius},
+		Pos:                 vector.Vector{X: DefaultRadius, Y: DefaultRadius},
 		Radius:              DefaultRadius,
 		TurnRate:            DefaultTurnRate,
 		MaxVelocity:         DefaultMaxVelocity,
@@ -204,14 +205,14 @@ func (s *Ship) OnFire() *ShipShot {
 	s.nextShotTimer.Reset()
 
 	// shot speed by heading
-	shotSpeed := Vector{
+	shotSpeed := vector.Vector{
 		X: s.MuzzleSpeed * math.Sin(s.Heading*math.Pi/180),
 		Y: -1 * s.MuzzleSpeed * math.Cos(s.Heading*math.Pi/180),
 	}
 	shotSpeed.Add(s.Speed)
 
 	shotPosition := s.Pos
-	shotPosition.Add(Vector{
+	shotPosition.Add(vector.Vector{
 		X: s.Radius / 2 * math.Sin(s.Heading*math.Pi/180),
 		Y: -1 * s.Radius / 2 * math.Cos(s.Heading*math.Pi/180),
 	})
