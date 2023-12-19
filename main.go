@@ -1,11 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"game/events"
 	"game/health"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	ebitenVec "github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/solarlune/resolv"
+	"image/color"
 	"log"
 )
 
@@ -25,6 +29,10 @@ type Game struct {
 	Shots          []*ShipShot
 	bar1           *health.Bar
 	bar2           *health.Bar
+	ceiling        *resolv.Object
+	floor          *resolv.Object
+	leftWall       *resolv.Object
+	rightWall      *resolv.Object
 }
 
 func (g *Game) Update() error {
@@ -42,7 +50,23 @@ func (g *Game) Update() error {
 	return nil
 }
 
+func printResolvObjAt(screen *ebiten.Image, x, y int, obj *resolv.Object) {
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("%v at [%v,%v] W:%v H:%v", obj.Tags(), obj.X, obj.Y, obj.W, obj.H), x, y)
+}
+
+func drawResolvObject(screen *ebiten.Image, obj *resolv.Object) {
+	ebitenVec.DrawFilledRect(screen, float32(obj.X), float32(obj.Y), float32(obj.W), float32(obj.H), color.RGBA{
+		R: 0xff,
+	}, false)
+}
+
 func (g *Game) Draw(screen *ebiten.Image) {
+	//drawResolvObject(screen, g.ceiling)
+	//drawResolvObject(screen, g.floor)
+	//drawResolvObject(screen, g.leftWall)
+	//drawResolvObject(screen, g.rightWall)
+	//drawResolvObject(screen, g.ship1.ResolvObj)
+
 	// draw ships
 	DrawShip(screen, g.ship1)
 	DrawShip(screen, g.ship2)
@@ -93,11 +117,15 @@ func NewGame(ship1, ship2 *Ship) *Game {
 	ship2.AddListener(&res, "shipHitByShot")
 
 	// space boundaries
+	res.ceiling = resolv.NewObject(0, 16, ScreenWidth, 16, "wall", "ceiling")
+	res.floor = resolv.NewObject(0, ScreenHeight-16, ScreenWidth, 16, "wall", "floor")
+	res.leftWall = resolv.NewObject(0, 16, 16, ScreenHeight-32, "wall", "leftWall")
+	res.rightWall = resolv.NewObject(ScreenWidth-16, 16, 16, ScreenHeight-32, "wall", "rightWall")
 	res.space.Add(
-		resolv.NewObject(0, 16, ScreenWidth, 16, "wall", "ceiling"),
-		resolv.NewObject(0, ScreenHeight-16, ScreenWidth, 16, "wall", "floor"),
-		resolv.NewObject(0, 16, 16, ScreenHeight-32, "wall", "leftWall"),
-		resolv.NewObject(ScreenWidth-16, 16, 16, ScreenHeight-32, "wall", "rightWall"),
+		res.ceiling,
+		res.floor,
+		res.leftWall,
+		res.rightWall,
 	)
 	res.space.Add(ship1.ResolvObj)
 	res.space.Add(ship2.ResolvObj)

@@ -80,9 +80,8 @@ func NewShip(id int, opts ...ShipOption) *Ship {
 
 	res.nextShotTimer = timer.NewTimer(res.FireRate)
 
-	// TODO: the radius thingy is no longer relevant
 	// build the resolv object for the ship
-	res.ResolvObj = resolv.NewObject(res.Pos.X, res.Pos.Y, res.Radius/2, res.Radius/2, "ship")
+	res.ResolvObj = resolv.NewObject(res.Pos.X, res.Pos.Y, res.Radius*2, res.Radius*2, "ship")
 	res.ResolvObj.Data = &res
 
 	return &res
@@ -93,43 +92,45 @@ func (s *Ship) Update() {
 	s.Pos.Add(s.Speed)
 	s.updateResolver()
 
-	s.handleWallCollision()
+	s.handleWallsCollision()
 	s.limitSpeed()
 }
 
 func (s *Ship) updateResolver() {
-	s.ResolvObj.X = s.Pos.X
-	s.ResolvObj.Y = s.Pos.Y
+	s.ResolvObj.X = s.Pos.X - s.ResolvObj.W/2
+	s.ResolvObj.Y = s.Pos.Y - s.ResolvObj.H/2
 	s.ResolvObj.Update()
 }
 
-func (s *Ship) handleWallCollision() {
+func (s *Ship) handleWallsCollision() {
 	if collision := s.ResolvObj.Check(s.Speed.X, s.Speed.Y, "wall"); collision != nil {
-		wall := collision.Objects[0]
-		contact := collision.ContactWithObject(wall)
-		log.Infof("collided with: %v vec: [%v,%v]", wall.Tags(), contact.X(), contact.Y())
-
-		if collision.HasTags("ceiling") {
-			s.Pos.Y += contact.Y()
-			s.Speed.Y *= s.CollisionElasticity
+		for _, wall := range collision.Objects {
+			s.handleWallCollision(wall)
+			s.updateResolver()
 		}
 
-		if collision.HasTags("floor") {
-			s.Pos.Y += contact.Y()
-			s.Speed.Y *= s.CollisionElasticity
-		}
+	}
+}
 
-		if collision.HasTags("leftWall") {
-			s.Pos.X += contact.X()
-			s.Speed.X *= s.CollisionElasticity
-		}
+func (s *Ship) handleWallCollision(wall *resolv.Object) {
+	if wall.HasTags("ceiling") {
+		s.Pos.Y = wall.Bottom() + s.ResolvObj.H/2 + 1
+		s.Speed.Y *= s.CollisionElasticity
+	}
 
-		if collision.HasTags("rightWall") {
-			s.Pos.X += contact.X()
-			s.Speed.X *= s.CollisionElasticity
-		}
+	if wall.HasTags("floor") {
+		s.Pos.Y = wall.Y - s.ResolvObj.H/2 - 1
+		s.Speed.Y *= s.CollisionElasticity
+	}
 
-		s.updateResolver()
+	if wall.HasTags("leftWall") {
+		s.Pos.X = wall.Right() + s.ResolvObj.W/2 + 1
+		s.Speed.X *= s.CollisionElasticity
+	}
+
+	if wall.HasTags("rightWall") {
+		s.Pos.X = wall.X - s.ResolvObj.W/2 - 1
+		s.Speed.X *= s.CollisionElasticity
 	}
 }
 
@@ -238,4 +239,9 @@ func (s *Ship) AddListener(observer events.Observer, eventName string) {
 
 func (s *Ship) RemoveListener(observer events.Observer, eventName string) {
 	s.eventPublisher.RemoveListener(observer, eventName)
+}
+
+func (s *Ship) AdjustResolverSize(w, h float64) {
+	s.ResolvObj.W = w
+	s.ResolvObj.H = h
 }

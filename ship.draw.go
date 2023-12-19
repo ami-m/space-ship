@@ -37,6 +37,9 @@ func DrawShip(screen *ebiten.Image, s *Ship) {
 	height := PlayerSprite.Bounds().Dy()
 	halfW := float64(width) * scaleCorrection / 2
 	halfH := float64(height) * scaleCorrection / 2
+
+	s.AdjustResolverSize(halfW*2, halfH*2)
+
 	op.GeoM.Translate(-halfW, -halfH)
 
 	op.GeoM.Rotate(s.Heading * math.Pi / 180.0)
