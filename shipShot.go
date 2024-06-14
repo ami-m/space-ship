@@ -36,7 +36,7 @@ func NewShipShot(ship *Ship, pos vector.Vector, speed vector.Vector, heading flo
 }
 
 func (s *ShipShot) Update() {
-	s.Pos.Add(s.Speed)
+	s.Pos.Add(&s.Speed)
 	s.updateResolver()
 	s.handleWallCollision()
 	s.handleShipCollision()

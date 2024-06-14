@@ -34,6 +34,7 @@ type ShipKeyMapping map[ebiten.Key]string
 
 type Ship struct {
 	Id                  int
+	Mass                float64
 	eventPublisher      events.Subject
 	ResolvObj           *resolv.Object
 	Pos                 vector.Vector
@@ -56,6 +57,7 @@ type Ship struct {
 func NewShip(id int, opts ...ShipOption) *Ship {
 	res := Ship{
 		Id:                  id,
+		Mass:                1,
 		eventPublisher:      events.NewEventPublisher(),
 		Pos:                 vector.Vector{X: DefaultRadius, Y: DefaultRadius},
 		Radius:              DefaultRadius,
@@ -89,10 +91,11 @@ func NewShip(id int, opts ...ShipOption) *Ship {
 
 func (s *Ship) Update() {
 	s.nextShotTimer.Update()
-	s.Pos.Add(s.Speed)
+	s.Pos.Add(&s.Speed)
 	s.updateResolver()
 
-	s.handleWallsCollision()
+	//s.handleWallsCollision()
+	//s.handleShipCollision()
 	s.limitSpeed()
 }
 
@@ -100,6 +103,62 @@ func (s *Ship) updateResolver() {
 	s.ResolvObj.X = s.Pos.X - s.ResolvObj.W/2
 	s.ResolvObj.Y = s.Pos.Y - s.ResolvObj.H/2
 	s.ResolvObj.Update()
+}
+
+func (s *Ship) UpdateFromResolver() {
+	s.Pos.X = s.ResolvObj.X + s.ResolvObj.W/2
+	s.Pos.Y = s.ResolvObj.Y + s.ResolvObj.H/2
+}
+
+func (s *Ship) handleShipCollision() {
+	if collision := s.ResolvObj.Check(s.Speed.X, s.Speed.Y, "ship"); collision != nil {
+		for _, otherObject := range collision.Objects {
+			otherShip := otherObject.Data.(*Ship)
+			newSpeed := s.calcSpeedPostShipCollision(otherShip)
+			s.Speed.X = newSpeed.X
+			s.Speed.Y = newSpeed.Y
+			//if isSideCollision(s.ResolvObj, otherObject) {
+			//	s.Speed.X *= -1
+			//}
+			//if isTopDownCollision(s.ResolvObj, otherObject) {
+			//	s.Speed.Y *= -1
+			//}
+			s.updateResolver()
+		}
+
+	}
+}
+
+func (s *Ship) calcSpeedPostShipCollision(otherShip *Ship) *vector.Vector {
+	// Determine the collision vector (line of impact)
+	collisionVector := otherShip.Pos.Clone().Subtract(&s.Pos).Normalize()
+
+	// Decompose the velocity vectors into parallel and perpendicular components
+	v1Parallel := collisionVector.Clone().Multiply(s.Speed.Dot(collisionVector))
+	v1Perpendicular := s.Speed.Clone().Subtract(v1Parallel)
+
+	v2Parallel := collisionVector.Clone().Multiply(otherShip.Speed.Dot(collisionVector))
+	//v2Perpendicular := otherShip.Speed.Clone().Subtract(v2Parallel)
+
+	// Calculate the new parallel components using the 1D elastic collision equations
+	m1, m2 := s.Mass, otherShip.Mass
+	newV1Parallel := v1Parallel.Clone().Multiply(m1 - m2).Add(v2Parallel.Clone().Multiply(2 * m2)).Multiply(1 / (m1 + m2))
+	//newV2Parallel := v2Parallel.Multiply(m2 - m1).Add(v1Parallel.Multiply(2 * m1)).Multiply(1 / (m1 + m2))
+
+	// Combine the parallel and perpendicular components
+	newSpeed := newV1Parallel.Clone().Add(v1Perpendicular)
+	return newSpeed
+}
+
+func isSideCollision(a, b *resolv.Object) bool {
+	return isClose(a.X, b.Right()) || isClose(a.Right(), b.X)
+}
+func isTopDownCollision(a, b *resolv.Object) bool {
+	return isClose(a.Y, b.Bottom()) || isClose(a.Bottom(), b.Y)
+}
+
+func isClose(a, b float64) bool {
+	return math.Abs(a-b) < 5
 }
 
 func (s *Ship) handleWallsCollision() {
@@ -192,10 +251,10 @@ func (s *Ship) OnFire() {
 		X: s.MuzzleSpeed * math.Sin(s.Heading*math.Pi/180),
 		Y: -1 * s.MuzzleSpeed * math.Cos(s.Heading*math.Pi/180),
 	}
-	shotSpeed.Add(s.Speed)
+	shotSpeed.Add(&s.Speed)
 
 	shotPosition := s.Pos
-	shotPosition.Add(vector.Vector{
+	shotPosition.Add(&vector.Vector{
 		X: s.Radius / 2 * math.Sin(s.Heading*math.Pi/180),
 		Y: -1 * s.Radius / 2 * math.Cos(s.Heading*math.Pi/180),
 	})

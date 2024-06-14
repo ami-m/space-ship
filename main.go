@@ -39,6 +39,34 @@ func (g *Game) Update() error {
 	g.pressedKeys = inpututil.AppendPressedKeys(g.pressedKeys[:0])
 	g.publishKeysPressed()
 
+	for _, b := range []*Ship{g.ship1, g.ship2} {
+
+		dx := b.Speed.X
+		dy := b.Speed.Y
+
+		if check := b.ResolvObj.Check(dx, 0, "ship", "wall"); check != nil {
+			// We move a bouncer into contact with the owning cell rather than the object because we don't need to be that specific and
+			// moving into contact with another moving object that bounces away can get them both stuck; it's easier to bounce off of the
+			// "containing" cells, which are static.
+			contact := check.ContactWithCell(check.Cells[0])
+			dx = contact[0]
+			b.Speed.X *= -1
+		}
+
+		b.ResolvObj.X += dx
+		b.Pos.X += dx
+
+		if check := b.ResolvObj.Check(0, dy, "ship", "wall"); check != nil {
+			contact := check.ContactWithCell(check.Cells[0])
+			dy = contact[1]
+			b.Speed.Y *= -1
+		}
+
+		b.ResolvObj.Y += dy
+		b.Pos.Y += dy
+		b.ResolvObj.Update()
+		//b.UpdateFromResolver()
+	}
 	g.ship1.Update()
 	g.ship2.Update()
 
@@ -99,7 +127,7 @@ func NewGame(ship1, ship2 *Ship) *Game {
 
 	res := Game{
 		eventPublisher: events.NewEventPublisher(),
-		space:          resolv.NewSpace(ScreenWidth, ScreenHeight, 16, 16),
+		space:          resolv.NewSpace(ScreenWidth, ScreenHeight, 8, 8),
 		pressedKeys:    nil,
 		ship1:          ship1,
 		ship2:          ship2,
